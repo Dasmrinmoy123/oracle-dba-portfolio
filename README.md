@@ -4,11 +4,11 @@ Welcome to my Oracle DBA portfolio! I am an experienced Database Administrator w
 ---
 
 ## **About Me**  
-- **Name**: [Your Full Name]  
+- **Name**: [Mrinmoy Das]  
 - **Experience**: 3.6 years as an Oracle Database Administrator  
 - **Specialization**: Database installation, configuration, backup/recovery, performance tuning, and high availability.  
-- **Email**: [your-email@example.com]  
-- **LinkedIn**: [LinkedIn Profile](https://linkedin.com/in/your-profile)  
+- **Email**: [mrinmoydas9064@gmail.com]  
+- **LinkedIn**: [LinkedInProfile](https://www.linkedin.com/in/mrinmoy-das-b7210a158?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app) 
 
 ---
 
