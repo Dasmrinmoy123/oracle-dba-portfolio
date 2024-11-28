@@ -51,16 +51,7 @@ Welcome to my Oracle DBA portfolio! I am an experienced Database Administrator w
 
 ---
 
-## **Sample Scripts**  
-### 2. **Database health Check script**
-...bash
-SELECT tablespace_name, used_space, free_space 
-FROM dba_tablespace_usage_metrics;
-
-SELECT COUNT(*) FROM v$session WHERE status = 'ACTIVE';
-
-SELECT owner, object_name, object_type 
-FROM dba_objects WHERE status = 'INVALID';
+## **Sample Scripts**
 
 ### 1. **RMAN Backup Script**  
 Automates daily incremental and weekly full backups.  
