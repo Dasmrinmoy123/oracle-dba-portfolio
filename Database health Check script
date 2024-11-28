@@ -1,0 +1,102 @@
+SET SERVEROUTPUT ON;
+SET LINESIZE 150;
+SET PAGESIZE 9999;
+
+DECLARE
+    v_instance_name VARCHAR2(50);
+    v_startup_time  VARCHAR2(50);
+    v_alert_log_dir VARCHAR2(255);
+BEGIN
+    -- Database Instance and Uptime
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    DBMS_OUTPUT.PUT_LINE('Database Instance and Uptime');
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    SELECT instance_name, startup_time
+    INTO v_instance_name, v_startup_time
+    FROM v$instance;
+    DBMS_OUTPUT.PUT_LINE('Instance Name: ' || v_instance_name);
+    DBMS_OUTPUT.PUT_LINE('Startup Time : ' || v_startup_time);
+    
+    -- Tablespace Usage
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    DBMS_OUTPUT.PUT_LINE('Tablespace Usage');
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    FOR tbs IN (
+        SELECT tablespace_name,
+               ROUND((used_space * 100) / total_space, 2) AS usage_percent,
+               ROUND(used_space, 2) AS used_mb,
+               ROUND(free_space, 2) AS free_mb,
+               ROUND(total_space, 2) AS total_mb
+        FROM (
+            SELECT a.tablespace_name,
+                   SUM(a.bytes) / (1024 * 1024) AS total_space,
+                   SUM(DECODE(b.bytes, NULL, 0, b.bytes)) / (1024 * 1024) AS free_space,
+                   SUM(a.bytes) / (1024 * 1024) - SUM(DECODE(b.bytes, NULL, 0, b.bytes)) / (1024 * 1024) AS used_space
+            FROM dba_data_files a
+            LEFT JOIN dba_free_space b
+            ON a.tablespace_name = b.tablespace_name
+            GROUP BY a.tablespace_name
+        )
+    )
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('Tablespace: ' || tbs.tablespace_name ||
+                             ' | Usage: ' || tbs.usage_percent || '%' ||
+                             ' | Used: ' || tbs.used_mb || ' MB' ||
+                             ' | Free: ' || tbs.free_mb || ' MB');
+    END LOOP;
+
+    -- Sessions
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    DBMS_OUTPUT.PUT_LINE('Active Sessions');
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    FOR session_rec IN (
+        SELECT status, COUNT(*) AS count
+        FROM v$session
+        GROUP BY status
+    )
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('Status: ' || session_rec.status || ' | Count: ' || session_rec.count);
+    END LOOP;
+
+    -- Invalid Objects
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    DBMS_OUTPUT.PUT_LINE('Invalid Database Objects');
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    FOR obj IN (
+        SELECT owner, object_name, object_type
+        FROM dba_objects
+        WHERE status = 'INVALID'
+    )
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('Owner: ' || obj.owner || 
+                             ' | Object: ' || obj.object_name || 
+                             ' | Type: ' || obj.object_type);
+    END LOOP;
+
+    -- Backup Status
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    DBMS_OUTPUT.PUT_LINE('RMAN Backup Status');
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    FOR backup IN (
+        SELECT session_key, input_type, status, to_char(start_time, 'YYYY-MM-DD HH24:MI:SS') AS start_time,
+               to_char(end_time, 'YYYY-MM-DD HH24:MI:SS') AS end_time
+        FROM v$rman_backup_job_details
+        WHERE end_time > SYSDATE - 7
+        ORDER BY start_time DESC
+    )
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('Session: ' || backup.session_key || 
+                             ' | Type: ' || backup.input_type || 
+                             ' | Status: ' || backup.status || 
+                             ' | Start: ' || backup.start_time || 
+                             ' | End: ' || backup.end_time);
+    END LOOP;
+
+    -- Alert Log Location
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    DBMS_OUTPUT.PUT_LINE('Alert Log File Location');
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    SELECT value INTO v_alert_log_dir FROM v$diag_info WHERE name = 'Alert log';
+    DBMS_OUTPUT.PUT_LINE('Alert Log Directory: ' || v_alert_log_dir);
+END;
+/
