@@ -53,6 +53,7 @@ Welcome to my Oracle DBA portfolio! I am an experienced Database Administrator w
 
 ## **Sample Scripts**  
 ### 2. **Database health Check script**
+...bash
 SELECT tablespace_name, used_space, free_space 
 FROM dba_tablespace_usage_metrics;
 
